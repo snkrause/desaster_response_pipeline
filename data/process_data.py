@@ -1,16 +1,106 @@
+# import libraries
 import sys
-
+import pandas as pd
+from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
-    pass
+    """
+    
 
+    Parameters
+    ----------
+    messages_filepath : STRING
+        Path of the file containing the messages.
+    categories_filepath : STRING
+        Path of the file containing the categories.
 
+    Returns
+    -------
+    df : DATAFRAME
+        Datatable with merged data.
+
+    """
+    
+    #load both files into dataframes
+    messages = pd.read_csv(messages_filepath)
+    categories = pd.read_csv(categories_filepath)
+    
+    #join both 
+    df = pd.merge(messages,categories,on='id')
+
+    # create a dataframe of the 36 individual category columns
+    categories = categories['categories'].str.split(';', expand=True)
+    row = categories.iloc[0]
+    category_colnames = row.str.split('-',expand=True)[0]
+    # rename the columns of `categories`
+    categories.columns = category_colnames
+    for column in categories:
+        # set each value to be the last character of the string
+        categories[column] = categories[column].str[-1:]
+        
+        # convert column from string to numeric
+        categories[column] =  categories[column].astype('int64')
+    
+    # drop the original categories column from `df`
+    df.drop(columns=['categories'],inplace=True)
+    df = pd.concat([df,categories],axis=1)
+    
+    return df
+
+    
 def clean_data(df):
-    pass
+    """
+    
+
+    Parameters
+    ----------
+    df : DATAFRAME
+        Newly loaded dataframe with categorized messages.
+
+    Returns
+    -------
+    df : DATAFRAME
+        Cleaned dataframe w/o duplicates, empty categories or empty rows.
+
+    """
+    #drop duplicates
+    df.drop_duplicates(subset='message', keep='first', inplace=True)
+    
+    #drop rows with only '0' which are not classified
+    df=df.loc[df[df.columns[4:40]].sum(axis=1)!=0].reset_index(drop=True)
+    
+    #drop all rows in which a category is neither 0 nor 1
+    num_cols=df.select_dtypes(exclude='object').columns.drop('id')
+    for col in num_cols:
+        df.drop(df.loc[~df[col].isin([0,1])].index, inplace=True)
+    #drop empty categories
+    for col in num_cols:
+        if sum(df[col])==0:
+            df.drop([col], axis=1, inplace=True)
+        else:
+            continue
+    
+    return df
 
 
 def save_data(df, database_filename):
-    pass  
+    """
+    
+
+    Parameters
+    ----------
+    df : DATAFRAME
+        Cleaned dataframe with categorized messages.
+    database_filename : STRING
+        Path for the database in which the messages are stored.
+
+    Returns
+    -------
+    None.
+
+    """
+    engine = create_engine('sqlite:///'+database_filename)
+    df.to_sql('messages', engine, index=False) 
 
 
 def main():
