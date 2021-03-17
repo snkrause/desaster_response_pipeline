@@ -1,7 +1,5 @@
 # Disaster Response Pipeline Project
 
-This project wants to provide a webpage that helps classifying message by the needs of the sender.
-
 ### Table of Contents
 
 1. [Installation](#installation)
@@ -15,7 +13,7 @@ This project wants to provide a webpage that helps classifying message by the ne
 There should be no necessary libraries to run the code here beyond the Anaconda distribution of Python.  The code should run with no issues using Python versions 3.*.
 
 ## Project Motivation<a name="motivation"></a>
-
+This project is part of my udacity Nanodegree Data Science. It combines an ETL and a NLP pipeline to provide a model with which messages can be classified into 36 categories. All of those messages come from real-life disasters and were prelabeled at figure eight https://appen.com/. The final goal is to provide disaster responders a quick way of getting information about the needs of the people in certain areas struck by disaster.
 
 ## Approach<a name="approach"></a>
 
@@ -67,4 +65,4 @@ All of those had very poor performance for the low count classes.
 2. Run the following command in the app's directory to run your web app.
     `python run.py`
 
-3. Go to http://0.0.0.0:3001/
+3. Go to http://0.0.0.0:3001/ or http://localhost:3001
