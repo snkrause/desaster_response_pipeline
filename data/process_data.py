@@ -64,7 +64,13 @@ def clean_data(df):
 
     """
     #drop duplicates
-    df.drop_duplicates(subset='message', keep='first', inplace=True)
+    df=df.drop_duplicates(subset='message', keep='first')
+
+    #drop rows with more than 90% nan values
+    df=df.drop(df[df.isnull().mean(axis=1)>0.9].index)
+
+    #fill nan values with 0
+    df=df.fillna(0)
     
     #drop rows with only '0' which are not classified
     df=df.loc[df[df.columns[4:40]].sum(axis=1)!=0].reset_index(drop=True)
@@ -73,12 +79,16 @@ def clean_data(df):
     num_cols=df.select_dtypes(exclude='object').columns.drop('id')
     for col in num_cols:
         df.drop(df.loc[~df[col].isin([0,1])].index, inplace=True)
+        
     #drop empty categories
     for col in num_cols:
         if sum(df[col])==0:
             df.drop([col], axis=1, inplace=True)
         else:
             continue
+    
+    #drop rows with more than 15 assigned classifications
+    df.drop(df[df[df.columns[4:39]].sum(axis=1)>15].index, axis=0, inplace=True)
     
     return df
 
@@ -99,8 +109,8 @@ def save_data(df, database_filename):
     None.
 
     """
-    engine = create_engine('sqlite:///'+database_filename)
-    df.to_sql('messages', engine, index=False) 
+    engine = create_engine('sqlite:///../data/'+database_filename)
+    df.to_sql('messages', engine, index=False, if_exists='replace') 
 
 
 def main():
