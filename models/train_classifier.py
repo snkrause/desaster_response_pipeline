@@ -14,6 +14,24 @@ from sklearn.metrics import classification_report
 from sklearn.tree import DecisionTreeClassifier
 
 def load_data(database_filepath):
+    """
+    
+
+    Parameters
+    ----------
+    database_filepath : STRING
+        path of the database for messages and their classification.
+
+    Returns
+    -------
+    X : array
+        messages column.
+    Y : array
+        36 categoriy labels.
+    category_names : list
+        names of the categories.
+
+    """
     # load data from database
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table('messages',engine)
@@ -27,6 +45,20 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    """
+    
+
+    Parameters
+    ----------
+    text : STRING
+        text string to be tokenized.
+
+    Returns
+    -------
+    clean_tokens : LIST
+        cleaned up list of the individual tokens of the text string.
+
+    """
     # Normalize text
     text = re.sub(r"[^a-zA-Z0-9]", " ",text)
 
@@ -51,6 +83,15 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    
+
+    Returns
+    -------
+    pipeline : CLASS
+        ready to use NLP pipeline.
+
+    """
     pipeline = Pipeline([
         ('vect',CountVectorizer(tokenizer=tokenize)),
         ('tfidf',TfidfTransformer()),
@@ -61,6 +102,26 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """
+    Testing the model with test data and printing out the average precision and f1-score
+    for all categories.
+
+    Parameters
+    ----------
+    model : CLASS
+        full NLP pipeline.
+    X_test : array
+        messages column.
+    Y_test : array
+        36 categoriy labels.
+    category_names : list
+        names of the categories.
+
+    Returns
+    -------
+    None.
+
+    """
     #predict test values
     Y_pred=model.predict(X_test)
     f1_score=[]
@@ -83,6 +144,21 @@ def evaluate_model(model, X_test, Y_test, category_names):
     results.to_excel("results.xlsx", index=False)      
 
 def save_model(model, model_filepath):
+    """
+    
+
+    Parameters
+    ----------
+    model : CLASS
+        full NLP pipeline.
+    model_filepath : STRING
+        path where to save the pkl file to store the fitted model.
+
+    Returns
+    -------
+    None.
+
+    """
     # Open the file to save as pkl file
     model_pkl = open(model_filepath, 'wb')
     pickle.dump(model, model_pkl)
