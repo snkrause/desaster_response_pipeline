@@ -6,7 +6,7 @@
 2. [Project Motivation](#motivation)
 3. [Approach](#approach)
 4. [Instructions](#instructions)
-
+5. [Files in the repository](#files)
 
 ## Installation <a name="installation"></a>
 
@@ -21,7 +21,7 @@ This project is part of my udacity Nanodegree Data Science. It combines an ETL a
 As a first task I check the task for duplicates, nan-values, wrong categorizations or empty categories. My findings were:
  
 - the category "child_alone" has anly "0" values and was dropped
-- the category "related" has only "1" values
+- the category "related" has only "1" values and was dropped
 - the category original had 61% nan values and there were 138 rows with more than 90% nan values
 - I dropped the rows
 - the category nan's were filled with 0
@@ -66,3 +66,22 @@ All of those had very poor performance for the low count classes.
     `python run.py`
 
 3. Go to http://0.0.0.0:3001/ or http://localhost:3001
+
+## Files in the repository <a name="files"></a>
+
+    app
+    | - template
+    | |- master.html # main page of web app
+    | |- go.html # classification result page of web app
+    |- run.py # Flask file that runs app
+    data
+    |- disaster_categories.csv # data to process
+    |- disaster_messages.csv # data to process
+    |- process_data.py
+    |- DisasterResponse.db # database to save clean data to
+    models
+    |- train_classifier.py
+    |- classifier.pkl # saved model
+    README.md
+    results.xlsx #scoring values for each category
+
