@@ -10,8 +10,9 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, make_scorer, f1_score, precision_score, recall_score
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
 
 def load_data(database_filepath):
     """
@@ -88,17 +89,31 @@ def build_model():
 
     Returns
     -------
-    pipeline : CLASS
-        ready to use NLP pipeline.
+    model : CLASS
+        In gridsearch optimized model.
 
     """
     pipeline = Pipeline([
         ('vect',CountVectorizer(tokenizer=tokenize)),
         ('tfidf',TfidfTransformer()),
-        ('clf',MultiOutputClassifier(estimator=DecisionTreeClassifier(splitter='random', criterion='entropy')))
+        ('clf',MultiOutputClassifier(estimator=DecisionTreeClassifier(criterion='entropy', max_depth=10, splitter='random')))
     ])
     
-    return pipeline
+    parameters = {
+            'clf__estimator__ccp_alpha': (0.0,0.1,0.2),
+            'tfidf__smooth_idf': (True,False),
+            'tfidf__sublinear_tf': (True,False)
+    }
+    
+    scorers = {
+        'precision': make_scorer(precision_score, zero_division=0),
+        'f1_score': make_scorer(f1_score, zero_division=0),
+        'recall': make_scorer(recall_score, zero_division=0)
+    }
+    
+    model = GridSearchCV(pipeline, parameters, return_train_score=scorers,refit=True , cv=2, verbose=3)
+    
+    return model
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -127,18 +142,23 @@ def evaluate_model(model, X_test, Y_test, category_names):
     f1_score=[]
     precision=[]
     classif=[]
+    recall_score=[]
     #check for each classification column the precision and f1-score
     for n in range(Y_pred.shape[1]):
         s=classification_report(Y_test[:,n], Y_pred[:,n],output_dict=True)
         classif.append(category_names[n])
         precision.append(s['1.0']['precision'])
         f1_score.append(s['1.0']['f1-score'])
+        recall_score.append(s['1.0']['recall'])
     #print result    
-    print('avg_precision:'+str(sum(precision)/len(precision))+', avg_f1-score:'+str(sum(f1_score)/len(f1_score)))
+    print('avg_precision:'+str(sum(precision)/len(precision))+', avg_f1-score\
+          :'+str(sum(f1_score)/len(f1_score))+', avg_recall-score:'
+          +str(sum(recall_score)/len(recall_score)))
     
     #form a dataframe with the results and export it as excel file
     results=pd.DataFrame(classif,columns=['classifier'])
     results['precision']=precision
+    results['recall']=recall_score
     results['f1-score']=f1_score
     results['model']="DecisionTreeClassifier"
     results.to_excel("results.xlsx", index=False)      
@@ -174,10 +194,12 @@ def main():
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
         
         print('Building model...')
-        model = build_model()
+        cv = build_model()
         
         print('Training model...')
-        model.fit(X_train, Y_train)
+        cv.fit(X_train, Y_train)
+        model=cv.best_estimator_
+        print(cv.best_params_)
         
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)

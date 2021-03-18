@@ -72,6 +72,9 @@ def clean_data(df):
     #fill nan values with 0
     df=df.fillna(0)
     
+    #drop column "related" since it only has the value 1
+    df=df.drop('related',axis=1)
+    
     #drop rows with only '0' which are not classified
     df=df.loc[df[df.columns[4:40]].sum(axis=1)!=0].reset_index(drop=True)
     
@@ -109,7 +112,7 @@ def save_data(df, database_filename):
     None.
 
     """
-    engine = create_engine('sqlite:///../data/'+database_filename)
+    engine = create_engine('sqlite:///'+database_filename)
     df.to_sql('messages', engine, index=False, if_exists='replace') 
 
 
